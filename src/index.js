@@ -20,7 +20,7 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
-  credentials: false
+  credentials: env.FRONTEND_ALLOW_CREDENTIALS === 'true'
 };
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));

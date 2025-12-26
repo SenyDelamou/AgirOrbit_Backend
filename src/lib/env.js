@@ -41,6 +41,7 @@ try {
     REFRESH_TOKEN_TTL_SECONDS: optionalInt('REFRESH_TOKEN_TTL_SECONDS', 60 * 60 * 24 * 30),
     FRONTEND_URL: optional('FRONTEND_URL', 'http://localhost:5173'),
     FRONTEND_ORIGINS: parseList('FRONTEND_URLS', optional('FRONTEND_URL', 'http://localhost:5173')),
+    FRONTEND_ALLOW_CREDENTIALS: optional('FRONTEND_ALLOW_CREDENTIALS', 'false'),
     GOOGLE_CLIENT_ID: optional('GOOGLE_CLIENT_ID'),
     SMTP_HOST: optional('SMTP_HOST'),
     SMTP_PORT: optionalInt('SMTP_PORT', 587),

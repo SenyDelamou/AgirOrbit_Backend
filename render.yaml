@@ -23,6 +23,8 @@ services:
         value: "2592000"
       - key: FRONTEND_URL
         value: https://agriorbit.vercel.app
+      - key: FRONTEND_ALLOW_CREDENTIALS
+        value: "true"
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: SMTP_HOST
