@@ -77,6 +77,22 @@ router.post('/register', async (req, res, next) => {
       }
     });
 
+    // Envoi d'un email de bienvenue / vérification (non bloquant)
+    (async () => {
+      try {
+        const frontendBase = env.FRONTEND_URL ? env.FRONTEND_URL.replace(/\/$/, '') : '';
+        const verifyLink = `${frontendBase}/verify-email`;
+
+        await sendMail({
+          to: user.email,
+          subject: 'Bienvenue sur AgriOrbit — confirmez votre adresse',
+          text: `Bonjour ${user.firstname ?? ''},\n\nMerci de vous être inscrit(e) sur AgriOrbit. Pour vérifier votre adresse email, veuillez visiter : ${verifyLink}\n\nSi vous n'avez pas créé de compte, ignorez ce message.\n\nMerci,\nL'équipe AgriOrbit`
+        });
+      } catch (mailErr) {
+        console.error('Failed to send welcome email:', mailErr);
+      }
+    })();
+
     const tokens = await issueTokens(user.id);
 
     res.json({ user: userPayload(user), ...tokens });
