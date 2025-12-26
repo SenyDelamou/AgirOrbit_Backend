@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VerificationPurpose {
+  PASSWORD_RESET
+  EMAIL_VERIFY
+}
+
+enum SatelliteProvider {
+  SENTINEL_2
+  LANDSAT_8
+  PLANET
+  OTHER
+}
+
+enum AnalysisStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+model User {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  passwordHash   String?
+  firstname      String?
+  lastname       String?
+  name           String?
+  organisation   String?
+  language       String           @default("fr")
+  picture        String?
+  localLanguages String[]         @default([])
+
+  emailVerifiedAt DateTime?
+
+  organizationId String?
+  organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  settings       UserSetting?
+  fields         Field[]          @relation("FieldOwner")
+  notifications  Notification[]
+
+  refreshTokens  RefreshToken[]
+  verifications  VerificationCode[]
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([organizationId])
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  country   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  fields    Field[]
+
+  @@index([name])
+}
+
+model UserSetting {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  emailNotifs     Boolean  @default(true)
+  pushNotifs      Boolean  @default(true)
+  marketingNotifs Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Field {
+  id             String   @id @default(uuid())
+  name           String
+  ownerId        String
+  organizationId String?
+  latitude       Float?
+  longitude      Float?
+  areaHa         Float?
+  geometryGeoJson Json?
+  crop           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  owner          User         @relation("FieldOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  observations   SatelliteObservation[]
+  reports        AnalysisReport[]
+  alerts         Alert[]
+
+  @@index([ownerId])
+  @@index([organizationId])
+}
+
+model SatelliteObservation {
+  id          String           @id @default(uuid())
+  fieldId     String
+  provider    SatelliteProvider @default(SENTINEL_2)
+  observedAt  DateTime
+  ndvi        Float?
+  ndwi        Float?
+  moisture    Float?
+  thermal     Float?
+  meta        Json?
+  createdAt   DateTime         @default(now())
+
+  field       Field            @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@index([fieldId, observedAt])
+}
+
+model AnalysisReport {
+  id            String        @id @default(uuid())
+  fieldId       String
+  status        AnalysisStatus @default(PENDING)
+  provider      SatelliteProvider @default(SENTINEL_2)
+  title         String?
+  crop          String?
+  stage         String?
+  yieldEstimate String?
+  healthStatus  String?
+  healthScore   Int?
+  summary       Json?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  field         Field         @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  recommendations AnalysisRecommendation[]
+  alerts        Alert[]
+
+  @@index([fieldId, createdAt])
+  @@index([status])
+}
+
+model AnalysisRecommendation {
+  id        String   @id @default(uuid())
+  reportId  String
+  issue     String
+  solution  String
+  impact    String?
+  createdAt DateTime @default(now())
+
+  report    AnalysisReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+}
+
+model Alert {
+  id        String        @id @default(uuid())
+  severity  AlertSeverity @default(INFO)
+  title     String
+  message   String
+  fieldId   String
+  reportId  String?
+  createdAt DateTime      @default(now())
+  readAt    DateTime?
+
+  field     Field         @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  report    AnalysisReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  notifications Notification[]
+
+  @@index([fieldId, createdAt])
+  @@index([reportId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType @default(INFO)
+  title     String?
+  message   String
+  alertId   String?
+  createdAt DateTime         @default(now())
+  readAt    DateTime?
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alert     Alert?           @relation(fields: [alertId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([alertId])
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  quote     String
+  metric    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationCode {
+  id         String              @id @default(uuid())
+  userId     String?
+  email      String
+  purpose    VerificationPurpose
+  codeHash   String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime            @default(now())
+
+  user       User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email, purpose])
+}
