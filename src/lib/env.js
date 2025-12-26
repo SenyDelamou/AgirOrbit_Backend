@@ -43,6 +43,7 @@ try {
     FRONTEND_ORIGINS: parseList('FRONTEND_URLS', optional('FRONTEND_URL', 'http://localhost:5173')),
     FRONTEND_ALLOW_CREDENTIALS: optional('FRONTEND_ALLOW_CREDENTIALS', 'false'),
     GOOGLE_CLIENT_ID: optional('GOOGLE_CLIENT_ID'),
+    ADMIN_TOKEN: optional('ADMIN_TOKEN'),
     SMTP_HOST: optional('SMTP_HOST'),
     SMTP_PORT: optionalInt('SMTP_PORT', 587),
     SMTP_USER: optional('SMTP_USER'),

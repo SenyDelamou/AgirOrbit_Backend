@@ -8,6 +8,7 @@ import usersRoutes from './routes/users.js';
 import fieldsRoutes from './routes/fields.js';
 import notificationsRoutes from './routes/notifications.js';
 import { notFound, errorHandler } from './middleware/error.js';
+import adminRoutes from './routes/admin.js';
 
 const app = express();
 
@@ -32,6 +33,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/fields', fieldsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+
+// Admin/debug routes (protected in production via ADMIN_TOKEN)
+app.use('/api/admin', adminRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
