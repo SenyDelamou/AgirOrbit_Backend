@@ -22,6 +22,13 @@ function optionalInt(name, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function parseList(name, fallback) {
+  const raw = process.env[name];
+  const source = raw === undefined || raw === '' ? fallback : raw;
+  if (Array.isArray(source)) return source;
+  return String(source).split(',').map(s => s.trim()).filter(Boolean);
+}
+
 let env;
 try {
   env = {
@@ -33,6 +40,7 @@ try {
     ACCESS_TOKEN_TTL_SECONDS: optionalInt('ACCESS_TOKEN_TTL_SECONDS', 900),
     REFRESH_TOKEN_TTL_SECONDS: optionalInt('REFRESH_TOKEN_TTL_SECONDS', 60 * 60 * 24 * 30),
     FRONTEND_URL: optional('FRONTEND_URL', 'http://localhost:5173'),
+    FRONTEND_ORIGINS: parseList('FRONTEND_URLS', optional('FRONTEND_URL', 'http://localhost:5173')),
     GOOGLE_CLIENT_ID: optional('GOOGLE_CLIENT_ID'),
     SMTP_HOST: optional('SMTP_HOST'),
     SMTP_PORT: optionalInt('SMTP_PORT', 587),

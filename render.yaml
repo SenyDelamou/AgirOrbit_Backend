@@ -22,7 +22,7 @@ services:
       - key: REFRESH_TOKEN_TTL_SECONDS
         value: "2592000"
       - key: FRONTEND_URL
-        sync: false
+        value: https://agriorbit.vercel.app
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: SMTP_HOST

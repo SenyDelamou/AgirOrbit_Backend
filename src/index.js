@@ -12,10 +12,17 @@ import { notFound, errorHandler } from './middleware/error.js';
 const app = express();
 
 app.use(helmet());
-app.use(cors({
-  origin: env.FRONTEND_URL,
+const allowedOrigins = Array.isArray(env.FRONTEND_ORIGINS) ? env.FRONTEND_ORIGINS : [env.FRONTEND_URL];
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (env.NODE_ENV !== 'production') return callback(null, true);
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: false
-}));
+};
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 
@@ -31,4 +38,8 @@ app.use(errorHandler);
 
 app.listen(env.PORT, () => {
   console.log(`API listening on http://localhost:${env.PORT}/api`);
+  console.log(`Configured FRONTEND_URL: ${env.FRONTEND_URL}`);
+  if (env.NODE_ENV !== 'production') {
+    console.log('CORS: allowing all origins (development)');
+  }
 });
